@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Visitors</title>
+<script type="text/javascript" src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+<script type="text/javascript" src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+<script type="text/javascript" src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script type="text/jsx">
+class Greeting extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {datetime: new Date(this.props.greeting.datetime) };
+	}
+	render() {
+		return <tr><td>{this.props.greeting.name}</td><td>{""+this.state.datetime}</td>
+		<td>{false && <button>Erase this evidence</button>}</td>
+		</tr>;
+	}
+}
+class Greetings extends React.Component {
+	render() {
+		return <table>
+			<tr><th>Who was here</th><th>When?</th><th></th></tr>
+			{this.props.greetings.map((greeting) => <Greeting greeting={greeting} />)}
+		</table>;
+	}
+}
+class EmptyWall extends React.Component {
+	constructor(props) {
+		super(props);
+		this.post = this.post.bind(this);
+		this.changed = this.changed.bind(this);
+		this.state = { name: '' };
+	}
+	post(e) {
+		e.preventDefault();
+		$.ajax({
+			type: 'POST',
+			url: 'person',
+			data: JSON.stringify({ name: this.state.name }),
+			success: ((data)=>this.props.posted()),
+			contentType: 'application/json',
+			dataType: 'json'
+		}); 
+	}
+	changed(event) {
+		var i = event.target;
+		var name = i.value || '';
+		this.setState({ name: name });
+	}
+	render() {
+		return <form onSubmit={this.post}><input type="text" value={this.state.name} onChange={this.changed}/><button onClick={this.post}>was here</button></form>;
+	}
+	
+}
+class Body extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			greetings: []
+		};
+		(this.posted = this.posted.bind(this))();
+	}
+	posted() {
+		$.getJSON('people', (data)=>this.setState({ greetings: data}));
+	}
+	render() {
+		return <div><EmptyWall posted={this.posted}/><p/><Greetings greetings={this.state.greetings}/></div>;
+	}
+}
+</script>
+<style>
+table, th, td {
+	border: 1px solid #000000;
+}
+</style>
+</head>
+<body>
+<div id="body"></div>
+<script type="text/jsx">
+ReactDOM.render(<Body/>, document.getElementById('body'));
+</script>
+</body>
+</html>
